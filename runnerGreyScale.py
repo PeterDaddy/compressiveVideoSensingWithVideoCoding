@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.fftpack as spfft
 import scipy.io as sio
-from pyCSalgos.BP.l1eq_pd import l1eq_pd
 from sparseRecovery.solvers import BasisPursuit
 from sparseRecovery.solvers import OrthogonalMP
 
