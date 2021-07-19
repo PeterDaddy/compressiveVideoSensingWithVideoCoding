@@ -4,7 +4,7 @@ import scipy.fftpack as spfft
 import scipy.io as sio
 from sparseRecovery.solvers import BasisPursuit
 from sparseRecovery.solvers import OrthogonalMP
-
+import predictionFunction
 from PIL import Image
 from sympy import fwht, ifwht
 from math import remainder
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     subBlockSize        = 'cow' # Sensing matrix type
     subBlockSize        = 16    # This could be moved to optParser section
     samplingRate        = 64   # This could be moved to optParser section
-    slidingWindow       = 8
+    slidingWindowSize   = 4
     # read origina l image
     originalImage       = Image.open(options.fileName, 'r')
     originalImage       = originalImage.convert('L')
@@ -78,7 +78,6 @@ if __name__ == "__main__":
     # For instance, 240/8 = 30 but 135/8 = 16.875 so we have to pad until it can fit to 17
     padSubImageHeight = imgHeight/subBlockSize
     padSubImageWidth  = imgWidth/subBlockSize
-    slidingWindowSize = 8
     while (remainder(padSubImageHeight,slidingWindowSize) != 0): padSubImageHeight = padSubImageHeight + 1
     while (remainder(padSubImageWidth,slidingWindowSize) != 0): padSubImageWidth = padSubImageWidth + 1
     
@@ -97,17 +96,24 @@ if __name__ == "__main__":
     # Intra-Inter prediction
     #Firstly,we obtain average data frame from datacube this can be done though simple average function or GMM
     # Allocate memory for averageFrame
-    averageFrame = np.zeros((int(padSubImageHeight), int(padSubImageWidth)))
+    averageFrame = np.asarray(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     for i in range(0,samplingRate): 
         averageFrame = averageFrame + dataCube[:,:, i]
     averageFrame = averageFrame/samplingRate
 
     # After that we create prediction template by applying intra/inter 
     # where sliding window can be varies but must be equal to slidingWindowSize parameter
+    # Allocate memory for datacube padSubImageWidth
+    intraPredictionBuffer = np.zeros((int(padSubImageHeight), int(padSubImageWidth)))
+    for ii, i in enumerate(range(0,int(padSubImageHeight),subBlockSize)):
+        for jj, j in enumerate(range(0,int(padSubImageWidth),subBlockSize)):
+            predictionTemplate = np.zeros((slidingWindowSize, slidingWindowSize))
+            predictionTemplate = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j)
+            intraPredictionBuffer[i:i+slidingWindowSize, j:j+slidingWindowSize] = predictionTemplate
+    
+            # Transform coding
 
-    # Transform coding
-
-    # Quantization table
+            # Quantization table
 
     # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
 
