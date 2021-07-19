@@ -85,6 +85,7 @@ if __name__ == "__main__":
     # Allocate memory for datacube padSubImageWidth
     dataCube = np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate))
     # Copy undeterminedSignal to dataCube space where its already paded.
+    # ***There must be more efficient way to do this, it will be optimized later
     for i in range(0,int(imgHeight/subBlockSize)):
         for j in range(0,int(imgWidth/subBlockSize)):
             dataCube[i,j,:] = undeterminedSignal[i, j, :]
