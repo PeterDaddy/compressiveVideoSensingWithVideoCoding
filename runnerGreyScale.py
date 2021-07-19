@@ -1,12 +1,19 @@
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import scipy.optimize as spopt
 import scipy.fftpack as spfft
+import scipy.io as sio
+from pyCSalgos.BP.l1eq_pd import l1eq_pd
+from sparseRecovery.solvers import BasisPursuit
+from sparseRecovery.solvers import OrthogonalMP
+
 from PIL import Image
-import cvxpy as cvx
+from sympy import fwht, ifwht
+from math import remainder
 
 import optparse
+
+def idct(x):
+    return spfft.idct(x.T, norm='ortho')
 
 def dct2(x):
     return spfft.dct(spfft.dct(x.T, norm='ortho', axis=0).T, norm='ortho', axis=0)
@@ -28,64 +35,98 @@ def get_options():
 
 # this is the main entry point of this script
 if __name__ == "__main__":
-    options = get_options()
-    subBlockSize = 16 #This could be moved to optParser section
-    samplingRate = 64 #This could be moved to optParser section
-    # read original image
-    originalImage = Image.open(options.fileName, 'r')
-    originalImageIntObj = np.asarray(originalImage)
-    imgwidth, imgheight = originalImage.size
-    y = np.zeros((int(imgwidth/subBlockSize),int(imgheight/subBlockSize),samplingRate))
-    
-    # sum of two sinusoids
+    print("Parameter initialize")
+    options             = get_options()
+    subBlockSize        = 'cow' # Sensing matrix type
+    subBlockSize        = 16    # This could be moved to optParser section
+    samplingRate        = 64   # This could be moved to optParser section
+    slidingWindow       = 8
+    # read origina l image
+    originalImage       = Image.open(options.fileName, 'r')
+    originalImage       = originalImage.convert('L')
+    originalImageIntObj = np.array(originalImage)
+    imgWidth, imgHeight = originalImage.size
+    undeterminedSignal  = np.zeros((int(imgHeight/subBlockSize),int(imgWidth/subBlockSize),samplingRate))
+    recoveredSignal     = np.zeros((imgHeight,imgWidth))
+
+    # compressed sensing parameter setup
     n = subBlockSize*subBlockSize
     m = samplingRate
-    ri = np.random.choice(n, m, replace=False) # random sample of indices
-    ri.sort() # sorting not strictly necessary, but convenient for plotting
-    # create idct matrix operator
-    A = spfft.idct(np.identity(n), norm='ortho', axis=0)
-    A = A[ri]
-    # do L1 optimization
-    vx = cvx.Variable(n)
-    objective = cvx.Minimize(cvx.norm(vx, 1))
 
-    for ii, i in enumerate(range(0,imgheight,subBlockSize)):
-        for jj, j in enumerate(range(0,imgwidth,subBlockSize)):
+    # create sensing matrix
+    phi = sio.loadmat('cowMatrix.mat')
+    phi = (phi['cowMatrix'])
+    #phi        = sphadamard.hadamard(n)
+    # code to replace all negative value with 0
+    phi[phi<0] = 0
+    # Slicing nxn to mxn
+    phi = np.double(phi[0:m,0:n])
+
+    print("Sparse projection")
+    for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
+        for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
             #2D Read out every subblock size in raster scan and do compressed sensing via for loop
             #later can be parallel on multithread
-            pulledBlockImage = originalImageIntObj[i:i+subBlockSize,j:j+subBlockSize, 1]
+            pulledBlockImage = originalImageIntObj[i:i+subBlockSize, j:j+subBlockSize]
             # Convert from 2D signal to 1D signal through raster scan
             # make a 1-dimensional view of arr
-            flat_signal = pulledBlockImage.ravel()
-            y[ii, jj] = flat_signal[ri]
+            flat_signal = np.double(pulledBlockImage.ravel())
+            undeterminedSignal[ii, jj, :] = (phi*flat_signal.T).sum(axis=1)
+    #np.save("foo.csv", undeterminedSignal)
+    
+    # Let begin the compression process
+    # First, we need to check whatever sub image size can fit into standard sliding window or not.
+    # For instance, 240/8 = 30 but 135/8 = 16.875 so we have to pad until it can fit to 17
+    padSubImageHeight = imgHeight/subBlockSize
+    padSubImageWidth  = imgWidth/subBlockSize
+    slidingWindowSize = 8
+    while (remainder(padSubImageHeight,slidingWindowSize) != 0): padSubImageHeight = padSubImageHeight + 1
+    while (remainder(padSubImageWidth,slidingWindowSize) != 0): padSubImageWidth = padSubImageWidth + 1
+    
+    # Allocate memory for datacube padSubImageWidth
+    dataCube = np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate))
+    # Copy undeterminedSignal to dataCube space where its already paded.
+    for i in range(0,int(imgHeight/subBlockSize)):
+        for j in range(0,int(imgWidth/subBlockSize)):
+            dataCube[i,j,:] = undeterminedSignal[i, j, :]
 
-    # Cube extraction
-
+    # We assume that we will process layer by layer, 
+    # which will result in multiple subimages based on the volmatric data.
+    # Each layer of volmumatric data can be accessed via this parameter
+    # dataCube[:, :, i], where i is a layer parameter which should not be larger than m
     # Intra-Inter prediction
+    #Firstly,we obtain average data frame from datacube this can be done though simple average function or GMM
+    # Allocate memory for averageFrame
+    averageFrame = np.zeros((int(padSubImageHeight), int(padSubImageWidth)))
+    for i in range(0,samplingRate): 
+        averageFrame = averageFrame + dataCube[:,:, i]
+    averageFrame = averageFrame/samplingRate
 
-    # DCT Transform
+    # After that we create prediction template by applying intra/inter 
+    # where sliding window can be varies but must be equal to slidingWindowSize parameter
 
-    # Quantization Table
+    # Transform coding
 
-    # Context Adaptive Binary Arithmatic coding (CABAC)
+    # Quantization table
+
+    # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
 
     # Packet formation
 
-    # for x in range(0,int(imgheight/subBlockSize)):
-    #     for y in range(0,int(imgwidth/subBlockSize)):
-    #     constraints = [A@vx == y]
-    #     prob = cvx.Problem(objective, constraints)
-    #     result = prob.solve(verbose=False)
+    # Some network simulation is required here in case rate control has been included in framework
 
-    #     # reconstruct signal
-    #     x = np.array(vx.value)
-    #     x = np.squeeze(x)
-    #     sig = spfft.idct(x, norm='ortho', axis=0)
-    #     # reform a numpy array of the original shape
-    #     reformedSignal = np.asarray(sig).reshape(subBlockSize, subBlockSize)
-    #print(reformedSignal)
-    #print(signal)
-    #plt.imshow(reformedSignal)
-    #plt.show()
-    #plt.imshow(signal)
-    #plt.show()
+    # Signal recovery via convex optimization on software or hardware acceleration
+
+    # L1 optimization setup
+
+    # This will recover until meet n dimensional
+    for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
+        for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
+            # initialize solution
+            xr = BasisPursuit(phi, undeterminedSignal[ii, jj])
+            recoveredSignal[i:i+subBlockSize, j:j+subBlockSize] = xr.reshape(subBlockSize, subBlockSize)
+    # converting 2d list into 1d
+    # using list comprehension
+    plt.imshow(recoveredSignal, cmap=plt.get_cmap('gray'))
+    plt.show()
+    print("Done")
