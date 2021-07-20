@@ -7,6 +7,7 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
     left                                                    = np.zeros((slidingWindowSize*2, 1))
     predictionTemplate                                      = np.zeros((slidingWindowSize, slidingWindowSize))
     intraPredictionBufferWidth, intraPredictionBufferHeight = intraPredictionBuffer.shape
+
     if(i == 0 and j == 0):
         # this stage will immediatly return empty template
         return predictionTemplate
@@ -51,6 +52,7 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
                      np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,2],
                      np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3],
                      0, 0, 0, 0]
+
     predictedCandidate = sumOfAbsoluteDifference(verticalReplication(top, slidingWindowSize),
                                                  horizonatalReplication(left, slidingWindowSize), 
                                                  meanDC (left, top, slidingWindowSize),
@@ -69,7 +71,7 @@ def verticalReplication(top, slidingWindowSize):
         for j in range(0, slidingWindowSize):
             verticalReplicationOutput[i,j] = top[i]
     return verticalReplicationOutput
-
+    
 def horizonatalReplication(left, slidingWindowSize):
     horizonatalReplicationOutput = np.zeros((slidingWindowSize, slidingWindowSize))
     for i in range(0, slidingWindowSize):
@@ -238,7 +240,6 @@ def verticalLeft(top, slidingWindowSize):
 
     return verticalLeftOut
 
-
 def horizontalUp(left, slidingWindowSize):
     horizontalUpOut = np.zeros((slidingWindowSize, slidingWindowSize))
     a = (left[0] +   left[1] + 1) / 2
@@ -281,7 +282,6 @@ def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC,
     SADTable[8] = np.sum(np.sum(np.abs(horizontalUp           - averageFrame)))
             
     minimumIndexInSAD = np.where(SADTable == SADTable.min())
-    print(SADTable)
     if(minimumIndexInSAD == 0):
         print('Vertical Replication')
         intraPredictionCandidate = np.floor(verticalReplication)
@@ -320,3 +320,26 @@ def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC,
         intra_mode='Mode 9'
     else:
         print('How did you get here?')
+
+
+    #    function candidate_value = inter_prediction(a, b, c, i, j)
+    #        % Overlapping searching
+    #        % a -> original
+    #        % b -> previous frame
+    #        % c -> search_area. ex = 4
+    #        % i -> x
+    #        % j -> y
+    #        cell2mat_b = cell2mat(b);
+    #        if((i==1) || (i==(size(a,1)) || (j==1) || (j==(size(a,2))))) 
+    #            %___Stop working at bouandary zone___
+    #            candidate_value = cell2mat_b(i:i+c-1, j:j+c-1);%___Then equal to coordinate___
+    #        else
+    #            for ii = 1:(c*2)
+    #                for jj = 1:(c*2)
+    #                    mag_search(ii,jj) = sum(sum(abs(a{i,j}-cell2mat_b(ii:ii+c-1, jj:jj+c-1))));
+    #                end
+    #            end
+    #            [pos_i, pos_j]  = find(min(mag_search(mag_search > 0)) == mag_search(:,:));
+    #            candidate_value = cell2mat_b(pos_i:pos_i+c-1, pos_j:pos_j+c-1);
+    #        end
+    #    end
