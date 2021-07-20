@@ -51,14 +51,17 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
                      np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,2],
                      np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3],
                      0, 0, 0, 0]
-
-
-
-
-
-
-
-
+    predictedCandidate = sumOfAbsoluteDifference(verticalReplication(top, slidingWindowSize),
+                                                 horizonatalReplication(left, slidingWindowSize), 
+                                                 meanDC (left, top, slidingWindowSize),
+                                                 diagonalDownLeft(top, slidingWindowSize),
+                                                 diagonalDownRight(left, top, leftTop, slidingWindowSize), 
+                                                 verticalRight(left, top, leftTop, slidingWindowSize), 
+                                                 horizontalDown(left, top, leftTop, slidingWindowSize), 
+                                                 verticalLeft(top, slidingWindowSize),
+                                                 horizontalUp(left, slidingWindowSize),
+                                                 averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize])
+    return predictedCandidate
 
 def verticalReplication(top, slidingWindowSize):
     verticalReplicationOutput = np.zeros((slidingWindowSize, slidingWindowSize))
@@ -83,13 +86,13 @@ def meanDC (left, top, slidingWindowSize):
 
 def diagonalDownLeft(top, slidingWindowSize):
     diagonalDownLeftOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (top[1] + 2*top[2] + top[3] + 2) / 4
-    b = (top[2] + 2*top[3] + top[4] + 2) / 4
-    c = (top[3] + 2*top[4] + top[5] + 2) / 4
-    d = (top[4] + 2*top[5] + top[6] + 2) / 4
-    e = (top[5] + 2*top[6] + top[7] + 2) / 4
-    f = (top[6] + 2*top[7] + top[8] + 2) / 4
-    g = (top[7] + 3*top[8]          + 2) / 4
+    a = (top[0] + 2*top[1] + top[2] + 2) / 4
+    b = (top[1] + 2*top[2] + top[3] + 2) / 4
+    c = (top[2] + 2*top[3] + top[4] + 2) / 4
+    d = (top[3] + 2*top[4] + top[5] + 2) / 4
+    e = (top[4] + 2*top[5] + top[6] + 2) / 4
+    f = (top[5] + 2*top[6] + top[7] + 2) / 4
+    g = (top[6] + 3*top[7]          + 2) / 4
 
     diagonalDownLeftOut[0,0] = a
     diagonalDownLeftOut[0,1] = b
@@ -112,13 +115,13 @@ def diagonalDownLeft(top, slidingWindowSize):
 
 def diagonalDownRight(left, top, leftTop, slidingWindowSize):
     diagonalDownRightOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (left[4] + 2*top[3]  + left[2] + 2) / 4
-    b = (left[3] + 2*left[2] + left[1] + 2) / 4
-    c = (left[2] + 2*left[1] + leftTop + 2) / 4
-    d = (left[1] + 2*leftTop + top[1]  + 2) / 4
-    e = (leftTop + 2*top[1]  + top[2]  + 2) / 4
-    f = (top[1]  + 2*top[2]  + top[3]  + 2) / 4
-    g = (top[1]  + 2*top[3]  + top[4]  + 2) / 4
+    a = (left[3] + 2*top[2]  + left[1] + 2) / 4
+    b = (left[2] + 2*left[1] + left[0] + 2) / 4
+    c = (left[1] + 2*left[0] + leftTop + 2) / 4
+    d = (left[0] + 2*leftTop + top[0]  + 2) / 4
+    e = (leftTop + 2*top[0]  + top[1]  + 2) / 4
+    f = (top[0]  + 2*top[1]  + top[2]  + 2) / 4
+    g = (top[0]  + 2*top[2]  + top[3]  + 2) / 4
 
     diagonalDownRightOut[0,0] = d
     diagonalDownRightOut[0,1] = e
@@ -141,16 +144,16 @@ def diagonalDownRight(left, top, leftTop, slidingWindowSize):
 
 def verticalRight(left, top, leftTop, slidingWindowSize):
     verticalRightOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (leftTop + top[1]    + 1) / 2
-    b = (top[1]  + top[2]    + 1) / 2
-    c = (top[2]  + top[3]    + 1) / 2
-    d = (top[3]  + top[4]    + 1) / 2
-    e = (left[1] + 2*leftTop + top[1] + 2) / 4
-    f = (leftTop + 2*top[1]  + top[2] + 2) / 4
-    g = (top[1]  + 2*top[2]  + top[3] + 2) / 4
-    h = (top[2]  + 2*top[3]  + top[4] + 2) / 4
-    i = (leftTop + 2*left[1] + left[2] + 2) / 4
-    j = (left[1] + 2*left[2] + left[3] + 2) / 4
+    a = (leftTop + top[0]    + 1) / 2
+    b = (top[0]  + top[1]    + 1) / 2
+    c = (top[1]  + top[2]    + 1) / 2
+    d = (top[2]  + top[3]    + 1) / 2
+    e = (left[0] + 2*leftTop + top[0] + 2) / 4
+    f = (leftTop + 2*top[0]  + top[1] + 2) / 4
+    g = (top[0]  + 2*top[1]  + top[2] + 2) / 4
+    h = (top[1]  + 2*top[2]  + top[3] + 2) / 4
+    i = (leftTop + 2*left[0] + left[1] + 2) / 4
+    j = (left[0] + 2*left[1] + left[2] + 2) / 4
 
     verticalRightOut[0,0] = a
     verticalRightOut[0,1] = b
@@ -173,16 +176,16 @@ def verticalRight(left, top, leftTop, slidingWindowSize):
 
 def horizontalDown(left, top, leftTop, slidingWindowSize):
     horizontalDownOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (leftTop + left[1]   + 1) / 2
-    b = (left[1] + 2*leftTop + top[1]  + 2) / 4
-    c = (leftTop + 2*top[1]  + top[2]  + 2) / 4
-    d = (top[1]  + 2*top[2]  + top[3]  + 2) / 4
-    e = (left[1] + left[2]   + 1) / 2
-    f = (leftTop + 2*left[1] + left[2] + 2) / 4
-    g = (left[2] + left[3]   + 1) / 2
-    h = (left[1] + 2*left[2] + left[3] + 2) / 4
-    i = (left[3] + left[4]   + 1) / 2
-    j = (left[2] + 2*left[3] + left[4] + 2) / 4
+    a = (leftTop +   left[0] + 1) / 2
+    b = (left[0] + 2*leftTop + top[0]  + 2) / 4
+    c = (leftTop + 2*top[0]  + top[1]  + 2) / 4
+    d = (top[0]  + 2*top[1]  + top[2]  + 2) / 4
+    e = (left[0] +   left[1] + 1) / 2
+    f = (leftTop + 2*left[0] + left[1] + 2) / 4
+    g = (left[1] +   left[2] + 1) / 2
+    h = (left[0] + 2*left[1] + left[2] + 2) / 4
+    i = (left[2] +   left[3] + 1) / 2
+    j = (left[1] + 2*left[2] + left[3] + 2) / 4
 
     horizontalDownOut[0,0] = a
     horizontalDownOut[0,1] = b
@@ -205,16 +208,16 @@ def horizontalDown(left, top, leftTop, slidingWindowSize):
 
 def verticalLeft(top, slidingWindowSize):
     verticalLeftOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (top[1] + top[2]            + 1) / 2
-    b = (top[2] + top[3]            + 1) / 2
-    c = (top[3] + top[4]            + 1) / 2
-    d = (top[4] + top[5]            + 1) / 2
-    e = (top[5] + top[6]            + 1) / 2
-    f = (top[1] + 2*top[2] + top[3] + 2) / 4
-    g = (top[2] + 2*top[3] + top[4] + 2) / 4
-    h = (top[3] + 2*top[4] + top[5] + 2) / 4
-    i = (top[4] + 2*top[5] + top[6] + 2) / 4
-    j = (top[5] + 2*top[6] + top[7] + 2) / 4
+    a = (top[0] +   top[1]          + 1) / 2
+    b = (top[1] +   top[2]          + 1) / 2
+    c = (top[2] +   top[3]          + 1) / 2
+    d = (top[3] +   top[4]          + 1) / 2
+    e = (top[4] +   top[5]          + 1) / 2
+    f = (top[0] + 2*top[1] + top[2] + 2) / 4
+    g = (top[1] + 2*top[2] + top[3] + 2) / 4
+    h = (top[2] + 2*top[3] + top[4] + 2) / 4
+    i = (top[3] + 2*top[4] + top[5] + 2) / 4
+    j = (top[4] + 2*top[5] + top[6] + 2) / 4
 
     verticalLeftOut[0,0] = a
     verticalLeftOut[0,1] = b
@@ -238,13 +241,13 @@ def verticalLeft(top, slidingWindowSize):
 
 def horizontalUp(left, slidingWindowSize):
     horizontalUpOut = np.zeros((slidingWindowSize, slidingWindowSize))
-    a = (left[1] + left[2]   + 1) / 2
-    b = (left[1] + 2*left[2] + left[3] + 2) / 4
-    c = (left[2] + left[3]   + 1) / 2
-    d = (left[2] + 2*left[3] + left[4] + 2) / 4
-    e = (left[3] + left[4]   + 1) / 2
-    f = (left[3] + 3*left[4] + 2) / 4
-    g = left[4]
+    a = (left[0] +   left[1] + 1) / 2
+    b = (left[0] + 2*left[1] + left[2] + 2) / 4
+    c = (left[1] +   left[2] + 1) / 2
+    d = (left[1] + 2*left[2] + left[3] + 2) / 4
+    e = (left[2] +   left[3] + 1) / 2
+    f = (left[2] + 3*left[3] + 2) / 4
+    g =  left[3]
 
     horizontalUpOut[0,0] = a
     horizontalUpOut[0,1] = b
@@ -266,7 +269,7 @@ def horizontalUp(left, slidingWindowSize):
     return horizontalUpOut
 
 def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, averageFrame):
-    SADTable    = np.zeros(8, 1)
+    SADTable    = np.zeros((9))
     SADTable[0] = np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))
     SADTable[1] = np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))
     SADTable[2] = np.sum(np.sum(np.abs(meanDC                 - averageFrame)))
@@ -278,6 +281,7 @@ def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC,
     SADTable[8] = np.sum(np.sum(np.abs(horizontalUp           - averageFrame)))
             
     minimumIndexInSAD = np.where(SADTable == SADTable.min())
+    print(SADTable)
     if(minimumIndexInSAD == 0):
         print('Vertical Replication')
         intraPredictionCandidate = np.floor(verticalReplication)
