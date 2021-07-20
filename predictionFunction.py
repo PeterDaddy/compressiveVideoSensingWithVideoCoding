@@ -7,53 +7,54 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
     left                                                    = np.zeros((slidingWindowSize*2, 1))
     predictionTemplate                                      = np.zeros((slidingWindowSize, slidingWindowSize))
     intraPredictionBufferWidth, intraPredictionBufferHeight = intraPredictionBuffer.shape
-
+    print('Now i is:', i,'and now j is:', j)
+    print(np.array(intraPredictionBuffer[(i+slidingWindowSize):(i+slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize]))
     if(i == 0 and j == 0):
         # this stage will immediatly return empty template
         return predictionTemplate
     else:
-        if(((i-1) > 0) and (j-1)> 0):
+        if(((i-slidingWindowSize) > 0) and (j-slidingWindowSize)> 0):
             # obtain value from bottom right of intraPredictionBuffer
-            leftTop = np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3]
+            leftTop = np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,3]
         else:
             leftTop = 0
-    if(((i-1) <= 0)):
+    if(((i-slidingWindowSize) <= 0)):
         top = np.zeros((slidingWindowSize*2, 1))
-    elif(((i-1) > 0) and ((j+1) <= intraPredictionBufferWidth)):
-        top = [np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,0],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,1],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,2],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,3],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, (j+1):(j+1)+slidingWindowSize])[3,0],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, (j+1):(j+1)+slidingWindowSize])[3,1],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, (j+1):(j+1)+slidingWindowSize])[3,2],
-               np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, (j+1):(j+1)+slidingWindowSize])[3,3]]
+    elif(((i-slidingWindowSize) > 0) and ((j+slidingWindowSize) <= intraPredictionBufferWidth)):
+        top = [np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,3],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, (j+slidingWindowSize):(j+slidingWindowSize)+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, (j+slidingWindowSize):(j+slidingWindowSize)+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, (j+slidingWindowSize):(j+slidingWindowSize)+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, (j+slidingWindowSize):(j+slidingWindowSize)+slidingWindowSize])[3,3]]
     else:
-        top = [np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,0],
-                    np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,1],
-                    np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,2],
-                    np.array(intraPredictionBuffer[(i-1):(i-1)+slidingWindowSize, j:j+slidingWindowSize])[3,3],
-                    0,0,0,0]
+        top = [np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[(i-slidingWindowSize):(i-slidingWindowSize)+slidingWindowSize, j:j+slidingWindowSize])[3,3],
+               0,0,0,0]
 
-    if(((j-1) <= 0)):
-        left  = np.zeros((slidingWindowSize*2, 1))
-    elif(((i+1) <= intraPredictionBufferHeight) and ((j-1) > 0)):
-        left = [np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,0],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,1],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,2],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3],
-                     np.array(intraPredictionBuffer[(i+1):(i+1)+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,0],
-                     np.array(intraPredictionBuffer[(i+1):(i+1)+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,1],
-                     np.array(intraPredictionBuffer[(i+1):(i+1)+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,2],
-                     np.array(intraPredictionBuffer[(i+1):(i+1)+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3]]
+    if(((j-slidingWindowSize) <= 0)):
+        left = np.zeros((slidingWindowSize*2, 1))
+    elif(((i+slidingWindowSize) <= intraPredictionBufferHeight) and ((j-slidingWindowSize) > 0)):
+        left = [np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,0],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,1],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,2],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,3],
+                np.array(intraPredictionBuffer[(i+slidingWindowSize):(i+slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,0],
+                np.array(intraPredictionBuffer[(i+slidingWindowSize):(i+slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,1],
+                np.array(intraPredictionBuffer[(i+slidingWindowSize):(i+slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,2],
+                np.array(intraPredictionBuffer[(i+slidingWindowSize):(i+slidingWindowSize)+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,3]]
     else:
-        left = [np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,0],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,1],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,2],
-                     np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3],
-                     0, 0, 0, 0]
+        left = [np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,0],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,1],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,2],
+                np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-slidingWindowSize):(j-slidingWindowSize)+slidingWindowSize])[3,3],
+                0, 0, 0, 0]
 
-    predictedCandidate = sumOfAbsoluteDifference(verticalReplication(top, slidingWindowSize),
+    predictionTemplate = sumOfAbsoluteDifference(verticalReplication(top, slidingWindowSize),
                                                  horizonatalReplication(left, slidingWindowSize), 
                                                  meanDC (left, top, slidingWindowSize),
                                                  diagonalDownLeft(top, slidingWindowSize),
@@ -62,8 +63,9 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
                                                  horizontalDown(left, top, leftTop, slidingWindowSize), 
                                                  verticalLeft(top, slidingWindowSize),
                                                  horizontalUp(left, slidingWindowSize),
-                                                 averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize])
-    return predictedCandidate
+                                                 averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize],
+                                                 slidingWindowSize)
+    return predictionTemplate
 
 def verticalReplication(top, slidingWindowSize):
     verticalReplicationOutput = np.zeros((slidingWindowSize, slidingWindowSize))
@@ -269,58 +271,52 @@ def horizontalUp(left, slidingWindowSize):
 
     return horizontalUpOut
 
-def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, averageFrame):
-    SADTable    = np.zeros((9))
-    SADTable[0] = np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))
-    SADTable[1] = np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))
-    SADTable[2] = np.sum(np.sum(np.abs(meanDC                 - averageFrame)))
-    SADTable[3] = np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))
-    SADTable[4] = np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))
-    SADTable[5] = np.sum(np.sum(np.abs(verticalRight          - averageFrame)))
-    SADTable[6] = np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))
-    SADTable[7] = np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))
-    SADTable[8] = np.sum(np.sum(np.abs(horizontalUp           - averageFrame)))
-            
-    minimumIndexInSAD = np.where(SADTable == SADTable.min())
-    if(minimumIndexInSAD == 0):
+def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, 
+                            diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, 
+                            averageFrame, slidingWindowSize):
+    SADTable = [round(np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))),
+                round(np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))),
+                round(np.sum(np.sum(np.abs(meanDC                 - averageFrame)))),
+                round(np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))),
+                round(np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))),
+                round(np.sum(np.sum(np.abs(verticalRight          - averageFrame)))),
+                round(np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))),
+                round(np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))),
+                round(np.sum(np.sum(np.abs(horizontalUp           - averageFrame))))]
+
+    minimumIndexInSAD = SADTable.index(min(SADTable))
+    if(minimumIndexInSAD == 0): 
         print('Vertical Replication')
         intraPredictionCandidate = np.floor(verticalReplication)
-        intra_mode='Mode 1'
     elif(minimumIndexInSAD == 2):
         print('Horizonatal Replication')
-        intra_prediction_candidate = np.floor(horizonatalReplication)
-        intra_mode='Mode 2'
+        intraPredictionCandidate = np.floor(horizonatalReplication)
     elif(minimumIndexInSAD == 3):
         print('Mean/DC')
-        intra_prediction_candidate = np.floor(meanDC)
-        intra_mode='Mode 3'
+        intraPredictionCandidate = np.floor(meanDC)
     elif(minimumIndexInSAD == 4):
         print('Diagonal Down-Left')
-        intra_prediction_candidate = np.floor(diagonalDownLeft)
-        intra_mode='Mode 4'
+        intraPredictionCandidate = np.floor(diagonalDownLeft)
     elif(minimumIndexInSAD == 5):
         print('Diagonal Down-Right')
-        intra_prediction_candidate = np.floor(diagonalDownRight)
-        intra_mode='Mode 5'
+        intraPredictionCandidate = np.floor(diagonalDownRight)
     elif(minimumIndexInSAD == 6):
         print('Vertical Right')
-        intra_prediction_candidate = np.floor(verticalRight)
-        intra_mode='Mode 6'
+        intraPredictionCandidate = np.floor(verticalRight)
     elif(minimumIndexInSAD == 7):
         print('Horizontal Down')
-        intra_prediction_candidate = np.floor(horizontalDown)
-        intra_mode='Mode 7'
+        intraPredictionCandidate = np.floor(horizontalDown)
     elif(minimumIndexInSAD == 8):
         print('Vertical Left')
-        intra_prediction_candidate = np.floor(verticalLeft)
-        intra_mode='Mode 8'
+        intraPredictionCandidate = np.floor(verticalLeft)
     elif(minimumIndexInSAD == 9):
         print('Horizontal Up')
-        intra_prediction_candidate = np.floor(horizontalUp)
-        intra_mode='Mode 9'
+        intraPredictionCandidate = np.floor(horizontalUp)
     else:
         print('How did you get here?')
-
+        intraPredictionCandidate = np.zeros((slidingWindowSize, slidingWindowSize))
+    
+    return intraPredictionCandidate
 
     #    function candidate_value = inter_prediction(a, b, c, i, j)
     #        % Overlapping searching
