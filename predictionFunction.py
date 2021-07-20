@@ -52,6 +52,14 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
                      np.array(intraPredictionBuffer[i:i+slidingWindowSize, (j-1):(j-1)+slidingWindowSize])[3,3],
                      0, 0, 0, 0]
 
+
+
+
+
+
+
+
+
 def verticalReplication(top, slidingWindowSize):
     verticalReplicationOutput = np.zeros((slidingWindowSize, slidingWindowSize))
     for i in range(0, slidingWindowSize):
@@ -256,3 +264,55 @@ def horizontalUp(left, slidingWindowSize):
     horizontalUpOut[3,3] = g
 
     return horizontalUpOut
+
+def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, averageFrame):
+    SADTable    = np.zeros(8, 1)
+    SADTable[0] = np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))
+    SADTable[1] = np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))
+    SADTable[2] = np.sum(np.sum(np.abs(meanDC                 - averageFrame)))
+    SADTable[3] = np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))
+    SADTable[4] = np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))
+    SADTable[5] = np.sum(np.sum(np.abs(verticalRight          - averageFrame)))
+    SADTable[6] = np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))
+    SADTable[7] = np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))
+    SADTable[8] = np.sum(np.sum(np.abs(horizontalUp           - averageFrame)))
+            
+    minimumIndexInSAD = np.where(SADTable == SADTable.min())
+    if(minimumIndexInSAD == 0):
+        print('Vertical Replication')
+        intraPredictionCandidate = np.floor(verticalReplication)
+        intra_mode='Mode 1'
+    elif(minimumIndexInSAD == 2):
+        print('Horizonatal Replication')
+        intra_prediction_candidate = np.floor(horizonatalReplication)
+        intra_mode='Mode 2'
+    elif(minimumIndexInSAD == 3):
+        print('Mean/DC')
+        intra_prediction_candidate = np.floor(meanDC)
+        intra_mode='Mode 3'
+    elif(minimumIndexInSAD == 4):
+        print('Diagonal Down-Left')
+        intra_prediction_candidate = np.floor(diagonalDownLeft)
+        intra_mode='Mode 4'
+    elif(minimumIndexInSAD == 5):
+        print('Diagonal Down-Right')
+        intra_prediction_candidate = np.floor(diagonalDownRight)
+        intra_mode='Mode 5'
+    elif(minimumIndexInSAD == 6):
+        print('Vertical Right')
+        intra_prediction_candidate = np.floor(verticalRight)
+        intra_mode='Mode 6'
+    elif(minimumIndexInSAD == 7):
+        print('Horizontal Down')
+        intra_prediction_candidate = np.floor(horizontalDown)
+        intra_mode='Mode 7'
+    elif(minimumIndexInSAD == 8):
+        print('Vertical Left')
+        intra_prediction_candidate = np.floor(verticalLeft)
+        intra_mode='Mode 8'
+    elif(minimumIndexInSAD == 9):
+        print('Horizontal Up')
+        intra_prediction_candidate = np.floor(horizontalUp)
+        intra_mode='Mode 9'
+    else:
+        print('How did you get here?')
