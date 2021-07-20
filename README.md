@@ -12,5 +12,5 @@ The project has been established to be 3 phases as the following:
 ===============================================================
 
 
-***Please note that this is my project to regain hardcore programming skills and be ready for a job after being lazy for a long time by using MATLAB.
+***Please note that this is my project to regain hardcore programming skills and be ready for a job after being lazy for a long time using MATLAB.
 Except for coding optimization, it may be impossible to add the requested feature to the main branch.***
