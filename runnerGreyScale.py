@@ -38,7 +38,7 @@ if __name__ == "__main__":
     options             = get_options()
     subBlockSize        = 'cow' # Sensing matrix type
     subBlockSize        = 16    # This could be moved to optParser section
-    samplingRate        = 2   # This could be moved to optParser section
+    samplingRate        = 16   # This could be moved to optParser section
     slidingWindowSize   = 4
     # read origina l image
     originalImage       = Image.open(options.fileName, 'r')
@@ -105,35 +105,40 @@ if __name__ == "__main__":
     predictionTemplate        = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBufferTemp = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
+    dctPredictionTemplate     = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
+    idctPredictionTemplate    = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
     # The first procedure here is to creating prediction template for all layer
     for ii, i in enumerate(range(0,int(padSubImageHeight), slidingWindowSize)):
         for jj, j in enumerate(range(0,int(padSubImageWidth), slidingWindowSize)):
             intraPredictionBufferTemp = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j, ii, jj)
             predictionTemplate[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = intraPredictionBufferTemp
-            intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
             # Transform coding
-
+            dctPredictionTemplate = dct2(averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize])
             # Quantization
 
             # Dequantization
 
             # Transform decoding
-
+            idctPredictionTemplate = idct2(dctPredictionTemplate)
+            intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = idctPredictionTemplate
     # Allocate memory
-    codedDatacube = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
-    decodedDatacube = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
+    codedDatacube     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
+    decodedDatacube   = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
+    dctcodedDatacube  = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
+    idctcodedDatacube = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
     # The second procedure here is to make a real prediction
     for i in range(0,samplingRate):
         codedDatacube[:, :, i] = dataCube[:,:,i] - predictionTemplate
         # Transform coding
-
+        dctcodedDatacube = dct2(codedDatacube[:, :, i])
         # Quantization
 
         # Dequantization
 
         # Transform decoding
+        idctcodedDatacube = idct2(dctcodedDatacube)
 
-        decodedDatacube[:, :, i] = codedDatacube[:,:,i] + predictionTemplate
+        decodedDatacube[:, :, i] = idctcodedDatacube + predictionTemplate
     
     codedDatacube.tofile("compressedCube.bin")
     # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
