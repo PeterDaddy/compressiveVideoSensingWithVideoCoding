@@ -1,5 +1,5 @@
 This project developed a faster encoder and decoder and intra/inter prediction and inverse problem solver software and hardware.
-The data structure in this work will be involved in 3D and 4D volumetric, which are traditional distinguishing features that are mostly found in vector-based data structures.
+The data structure in this work will be involved in 3D and 4D dataframe, which are traditional distinguishing features that are mostly found in vector-based data structures.
 
 
 ===============================================================
