@@ -13,44 +13,69 @@ def intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j
     else:
         if(((ii-1) > 0) and (jj-1) > 0):
             # obtain value from bottom right of intraPredictionBuffer
-            leftTop = np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3]
+            leftTop = np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                                     ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3]
         else:
             leftTop = 0
 
     if(((ii-1) <= 0)):
         top = np.zeros((slidingWindowSize*2, 1))
     elif(((ii-1) > 0) and ((jj+1) < (intraPredictionBufferWidth/slidingWindowSize))):
-        top = [np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,0],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,1],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,2],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,3],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,0],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,1],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,2],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,3]]
+        top = [np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,3],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj+1)*slidingWindowSize):((jj+1)*slidingWindowSize)+slidingWindowSize])[3,3]]
     else:
-        top = [np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,0],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,1],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,2],
-               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,3],
+        top = [np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,0],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,1],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,2],
+               np.array(intraPredictionBuffer[((ii-1)*slidingWindowSize):((ii-1)*slidingWindowSize)+slidingWindowSize, 
+                                              ((jj)*slidingWindowSize):((jj)*slidingWindowSize)+slidingWindowSize])[3,3],
                0,0,0,0]
 
     if(((jj-1) <= 0)):
         left = np.zeros((slidingWindowSize*2, 1))
     elif(((ii+1) < (intraPredictionBufferHeight/slidingWindowSize)) and ((jj-1) > 0)):
-        left = [np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3],
-                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
-                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
-                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
-                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3]]
+        left = [np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3],
+                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
+                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
+                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
+                np.array(intraPredictionBuffer[((ii+1)*slidingWindowSize):((ii+1)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3]]
     else:
-        left = [np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
-                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3],
+        left = [np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[0,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[1,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[2,3],
+                np.array(intraPredictionBuffer[((ii)*slidingWindowSize):((ii)*slidingWindowSize)+slidingWindowSize, 
+                                               ((jj-1)*slidingWindowSize):((jj-1)*slidingWindowSize)+slidingWindowSize])[3,3],
                 0, 0, 0, 0]
 
     predictionTemplate = sumOfAbsoluteDifference(verticalReplication(top, slidingWindowSize),
