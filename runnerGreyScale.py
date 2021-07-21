@@ -71,8 +71,6 @@ if __name__ == "__main__":
             # make a 1-dimensional view of arr
             flat_signal = np.double(pulledBlockImage.ravel())
             undeterminedSignal[ii, jj, :] = (phi*flat_signal.T).sum(axis=1)
-    #np.save("foo.csv", undeterminedSignal)
-    
     # Let begin the compression process
     # First, we need to check whatever sub image size can fit into standard sliding window or not.
     # For instance, 240/8 = 30 but 135/8 = 16.875 so we have to pad until it can fit to 17
@@ -88,7 +86,7 @@ if __name__ == "__main__":
     for i in range(0,int(imgHeight/subBlockSize)):
         for j in range(0,int(imgWidth/subBlockSize)):
             dataCube[i,j,:] = undeterminedSignal[i, j, :]
-
+    dataCube.tofile("unCompressedCube.bin")
     # We assume that we will process layer by layer, 
     # which will result in multiple subimages based on the volmatric data.
     # Each layer of volmumatric data can be accessed via this parameter
@@ -107,6 +105,7 @@ if __name__ == "__main__":
     predictionTemplate        = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBufferTemp = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
+    # The first procedure here is to creating prediction template for all layer
     for ii, i in enumerate(range(0,int(padSubImageHeight), slidingWindowSize)):
         for jj, j in enumerate(range(0,int(padSubImageWidth), slidingWindowSize)):
             intraPredictionBufferTemp = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j, ii, jj)
@@ -114,10 +113,29 @@ if __name__ == "__main__":
             intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
             # Transform coding
 
-            # Quantization table
-    np.save("foo.csv", dataCube[:,:,1] - predictionTemplate)
-    plt.imshow(dataCube[:,:,1] - predictionTemplate, cmap=plt.get_cmap('gray'))
-    plt.show()
+            # Quantization
+
+            # Dequantization
+
+            # Transform decoding
+
+    # Allocate memory
+    codedDatacube = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
+    decodedDatacube = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
+    # The second procedure here is to make a real prediction
+    for i in range(0,samplingRate):
+        codedDatacube[:, :, i] = dataCube[:,:,i] - predictionTemplate
+        # Transform coding
+
+        # Quantization
+
+        # Dequantization
+
+        # Transform decoding
+
+        decodedDatacube[:, :, i] = codedDatacube[:,:,i] + predictionTemplate
+    
+    codedDatacube.tofile("compressedCube.bin")
     # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
 
     # Packet formation
@@ -131,7 +149,7 @@ if __name__ == "__main__":
     for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
         for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
             # initialize solution
-            xr = BasisPursuit(phi, undeterminedSignal[ii, jj])
+            xr = BasisPursuit(phi, decodedDatacube[ii, jj, :])
             recoveredSignal[i:i+subBlockSize, j:j+subBlockSize] = xr.reshape(subBlockSize, subBlockSize)
     # converting 2d list into 1d
     # using list comprehension
