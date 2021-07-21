@@ -38,7 +38,7 @@ if __name__ == "__main__":
     options             = get_options()
     subBlockSize        = 'cow' # Sensing matrix type
     subBlockSize        = 16    # This could be moved to optParser section
-    samplingRate        = 64   # This could be moved to optParser section
+    samplingRate        = 2   # This could be moved to optParser section
     slidingWindowSize   = 4
     # read origina l image
     originalImage       = Image.open(options.fileName, 'r')
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     while (remainder(padSubImageWidth,slidingWindowSize) != 0): padSubImageWidth = padSubImageWidth + 1
     
     # Allocate memory for datacube padSubImageWidth
-    dataCube = np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate))
+    dataCube = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth),samplingRate)))
     # Copy undeterminedSignal to dataCube space where its already paded.
     # ***There must be more efficient way to do this, it will be optimized later
     for i in range(0,int(imgHeight/subBlockSize)):
@@ -96,35 +96,37 @@ if __name__ == "__main__":
     # Intra-Inter prediction
     #Firstly,we obtain average data frame from datacube this can be done though simple average function or GMM
     # Allocate memory for averageFrame
-    averageFrame = np.asarray(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+    averageFrame = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     for i in range(0,samplingRate): 
         averageFrame = averageFrame + dataCube[:,:, i]
-    averageFrame = averageFrame/samplingRate
+    averageFrame = np.floor(averageFrame/samplingRate)
 
     # After that we create prediction template by applying intra/inter 
     # where sliding window can be varies but must be equal to slidingWindowSize parameter
     # Allocate memory for datacube padSubImageWidth
-    intraPredictionBuffer = np.zeros((int(padSubImageHeight), int(padSubImageWidth)))
-    for ii, i in enumerate(range(0,int(padSubImageHeight),subBlockSize)):
-        for jj, j in enumerate(range(0,int(padSubImageWidth),subBlockSize)):
-            predictionTemplate = np.zeros((slidingWindowSize, slidingWindowSize))
-            predictionTemplate = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j)
-            intraPredictionBuffer[i:i+slidingWindowSize, j:j+slidingWindowSize] = predictionTemplate
-    
+    predictionTemplate        = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+    intraPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+    intraPredictionBufferTemp = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
+    for ii, i in enumerate(range(0,int(padSubImageHeight), slidingWindowSize)):
+        for jj, j in enumerate(range(0,int(padSubImageWidth), slidingWindowSize)):
+            intraPredictionBufferTemp = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j, ii, jj)
+            predictionTemplate[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = intraPredictionBufferTemp
+            intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
             # Transform coding
 
             # Quantization table
-
+    np.save("foo.csv", dataCube[:,:,1] - predictionTemplate)
+    plt.imshow(dataCube[:,:,1] - predictionTemplate, cmap=plt.get_cmap('gray'))
+    plt.show()
     # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
 
     # Packet formation
 
     # Some network simulation is required here in case rate control has been included in framework
 
+    print("Signal recovery via convex optimization")
     # Signal recovery via convex optimization on software or hardware acceleration
-
     # L1 optimization setup
-
     # This will recover until meet n dimensional
     for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
         for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
