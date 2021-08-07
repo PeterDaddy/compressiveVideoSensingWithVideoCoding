@@ -1,6 +1,7 @@
 This project developed a faster encoder and decoder and intra/inter prediction and inverse problem solver software and hardware.
 The data structure in this work will be involved in 3D and 4D dataframe, which are traditional distinguishing features that are mostly found in vector-based data structures.
-
+***Encoding time is now reduced due to the addition of a ThreadPoolExecutor() for each color channel.***
+***The program structure has been slightly modified in order to reduce the dimensionality of parameter; some functions in runner() have been moved to processingFunctionsPerchannel()***
 
 ===============================================================
 
@@ -13,4 +14,4 @@ The project has been established to be 3 phases as the following:
 
 
 ***Please note that this is my project to regain hardcore programming skills and be ready for a job after being lazy for a long time using MATLAB.
-Except for coding optimization, it may be impossible to add the requested feature to the main branch.***
+Except for coding optimization, it may be impossible to add the requested features to the main branch.***
