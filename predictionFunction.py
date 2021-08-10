@@ -109,7 +109,7 @@ def meanDC (left, top, slidingWindowSize):
     meanDCOut = np.zeros((slidingWindowSize, slidingWindowSize))
     for i in range(0, slidingWindowSize):
         for j in range(0, slidingWindowSize):
-            meanDCOut[i,j] = np.round(np.mean(left[0:slidingWindowSize] + top[0:slidingWindowSize]))
+            meanDCOut[i,j] = np.floor(np.mean(left[0:slidingWindowSize] + top[0:slidingWindowSize]))
     return meanDCOut
 
 def diagonalDownLeft(top, slidingWindowSize):
@@ -298,46 +298,46 @@ def horizontalUp(left, slidingWindowSize):
 def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, 
                             diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, 
                             averageFrame, slidingWindowSize):
-    SADTable = [round(np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))),
-                round(np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))),
-                round(np.sum(np.sum(np.abs(meanDC                 - averageFrame)))),
-                round(np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))),
-                round(np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))),
-                round(np.sum(np.sum(np.abs(verticalRight          - averageFrame)))),
-                round(np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))),
-                round(np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))),
-                round(np.sum(np.sum(np.abs(horizontalUp           - averageFrame))))]
+    SADTable = [np.floor(np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(meanDC                 - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(verticalRight          - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))),
+                np.floor(np.sum(np.sum(np.abs(horizontalUp           - averageFrame))))]
 
     minimumIndexInSAD = SADTable.index(min(SADTable))
     if(minimumIndexInSAD == 0): 
-        print('Vertical Replication')
+        #print('Vertical Replication')
         intraPredictionCandidate = np.floor(verticalReplication)
     elif(minimumIndexInSAD == 1):
-        print('Horizonatal Replication')
+        #print('Horizonatal Replication')
         intraPredictionCandidate = np.floor(horizonatalReplication)
     elif(minimumIndexInSAD == 2):
-        print('Mean/DC')
+        #print('Mean/DC')
         intraPredictionCandidate = np.floor(meanDC)
     elif(minimumIndexInSAD == 3):
-        print('Diagonal Down-Left')
+        #print('Diagonal Down-Left')
         intraPredictionCandidate = np.floor(diagonalDownLeft)
     elif(minimumIndexInSAD == 4):
-        print('Diagonal Down-Right')
+        #print('Diagonal Down-Right')
         intraPredictionCandidate = np.floor(diagonalDownRight)
     elif(minimumIndexInSAD == 5):
-        print('Vertical Right')
+        #print('Vertical Right')
         intraPredictionCandidate = np.floor(verticalRight)
     elif(minimumIndexInSAD == 6):
-        print('Horizontal Down')
+        #print('Horizontal Down')
         intraPredictionCandidate = np.floor(horizontalDown)
     elif(minimumIndexInSAD == 7):
-        print('Vertical Left')
+        #print('Vertical Left')
         intraPredictionCandidate = np.floor(verticalLeft)
     elif(minimumIndexInSAD == 8):
-        print('Horizontal Up')
+        #print('Horizontal Up')
         intraPredictionCandidate = np.floor(horizontalUp)
     else:
-        print('How did you get here?')
+        #print('How did you get here?')
         intraPredictionCandidate = np.zeros((slidingWindowSize, slidingWindowSize))
 
     return intraPredictionCandidate
