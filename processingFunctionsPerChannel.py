@@ -76,6 +76,7 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
     # Allocate memory for datacube padSubImageWidth
     predictionTemplate        = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+    interPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     intraPredictionBufferTemp = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
     dctPredictionTemplate     = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
     idctPredictionTemplate    = np.array(np.zeros((slidingWindowSize, slidingWindowSize)))
@@ -83,11 +84,10 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
     for ii, i in enumerate(range(0,int(padSubImageHeight), slidingWindowSize)):
         for jj, j in enumerate(range(0,int(padSubImageWidth), slidingWindowSize)):
             intraPredictionBufferTemp = predictionFunction.intraPrediction(averageFrame, intraPredictionBuffer, slidingWindowSize, i, j, ii, jj)
+            predictionFunction.interPrediction(averageFrame, interPredictionBuffer, slidingWindowSize, i, j, ii, jj)
             predictionTemplate[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = intraPredictionBufferTemp
-            # Transform coding
-            dctPredictionTemplate  = dct2(averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize])
-            # Transform decoding
-            idctPredictionTemplate = idct2(dctPredictionTemplate)
+            
+            interPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
             intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
     
     #print('Compressing...')
@@ -147,29 +147,28 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
     # L1 optimization setup
     # This will recover until meet n dimensional
     for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
-        for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
+        for jj, j in enumerate(range(0,imgWidth,subBlockSize*8)):
             # initialize solution
-            minEnergy = (theta.T*decodedDatacube[ii, jj, :]).sum(axis=1)
-            # with concurrent.futures.ThreadPoolExecutor() as executor:
-            #     jj = jj*8
-            #     future_0  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+0, :])
-            #     future_1  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+1, :])
-            #     future_2  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+2, :])
-            #     future_3  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+3, :])
-            #     future_4  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+4, :])
-            #     future_5  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+5, :])
-            #     future_6  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+6, :])
-            #     future_7  = executor.submit(BasisPursuit, phi, decodedDatacube[ii, jj+7, :])
+            #minEnergy = (phi.T*undeterminedSignal[ii, jj, :]).sum(axis=1)
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                jj = jj*8
+                future_0  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+0, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+0, :])
+                future_1  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+1, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+1, :])
+                future_2  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+2, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+2, :])
+                future_3  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+3, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+3, :])
+                future_4  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+4, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+4, :])
+                future_5  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+5, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+5, :])
+                future_6  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+6, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+6, :])
+                future_7  = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+7, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+7, :])
 
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*0):(j+(subBlockSize*0))+subBlockSize] = future_0.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*1):(j+(subBlockSize*1))+subBlockSize] = future_1.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*2):(j+(subBlockSize*2))+subBlockSize] = future_2.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*3):(j+(subBlockSize*3))+subBlockSize] = future_3.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*4):(j+(subBlockSize*4))+subBlockSize] = future_4.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*5):(j+(subBlockSize*5))+subBlockSize] = future_5.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*6):(j+(subBlockSize*6))+subBlockSize] = future_6.result().reshape(subBlockSize, subBlockSize)
-            #     recoveredSignal[i:i+subBlockSize, j+(subBlockSize*7):(j+(subBlockSize*7))+subBlockSize] = future_7.result().reshape(subBlockSize, subBlockSize)
-            recoveredSignal[i:i+subBlockSize, j:j+subBlockSize] = idct((l1eq_pd(minEnergy, theta, [], decodedDatacube[ii, jj, :]))).reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*0):(j+(subBlockSize*0))+subBlockSize] = future_0.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*1):(j+(subBlockSize*1))+subBlockSize] = future_1.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*2):(j+(subBlockSize*2))+subBlockSize] = future_2.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*3):(j+(subBlockSize*3))+subBlockSize] = future_3.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*4):(j+(subBlockSize*4))+subBlockSize] = future_4.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*5):(j+(subBlockSize*5))+subBlockSize] = future_5.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*6):(j+(subBlockSize*6))+subBlockSize] = future_6.result().reshape(subBlockSize, subBlockSize)
+                recoveredSignal[i:i+subBlockSize, j+(subBlockSize*7):(j+(subBlockSize*7))+subBlockSize] = future_7.result().reshape(subBlockSize, subBlockSize)
             #plt.imshow(recoveredSignal)
             #plt.draw()
             #plt.pause(0.0001)

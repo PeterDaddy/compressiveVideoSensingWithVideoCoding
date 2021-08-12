@@ -342,24 +342,24 @@ def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC,
 
     return intraPredictionCandidate
 
-    #    function candidate_value = inter_prediction(a, b, c, i, j)
+def interPrediction(averageFrame, interPredictionBuffer, slidingWindowSize, i, j, ii, jj):
+    # Sliding window here should be the same size as intra prediction
     #        % Overlapping searching
     #        % a -> original
     #        % b -> previous frame
     #        % c -> search_area. ex = 4
     #        % i -> x
     #        % j -> y
-    #        cell2mat_b = cell2mat(b);
-    #        if((i==1) || (i==(size(a,1)) || (j==1) || (j==(size(a,2))))) 
-    #            %___Stop working at bouandary zone___
-    #            candidate_value = cell2mat_b(i:i+c-1, j:j+c-1);%___Then equal to coordinate___
-    #        else
-    #            for ii = 1:(c*2)
-    #                for jj = 1:(c*2)
-    #                    mag_search(ii,jj) = sum(sum(abs(a{i,j}-cell2mat_b(ii:ii+c-1, jj:jj+c-1))));
-    #                end
-    #            end
-    #            [pos_i, pos_j]  = find(min(mag_search(mag_search > 0)) == mag_search(:,:));
-    #            candidate_value = cell2mat_b(pos_i:pos_i+c-1, pos_j:pos_j+c-1);
-    #        end
-    #    end
+    predictionTemplate                = np.zeros((slidingWindowSize, slidingWindowSize))
+    interPredictionBufferPadded       = np.pad(interPredictionBuffer, slidingWindowSize, mode='constant')
+    errorTable                        = np.zeros((slidingWindowSize*slidingWindowSize, slidingWindowSize*slidingWindowSize))
+    interPredictionCandidate          = 0
+    for ii, iii in enumerate(range(-(slidingWindowSize*slidingWindowSize), (slidingWindowSize*slidingWindowSize), 1)):
+        for jj ,jjj in enumerate(range(-(slidingWindowSize*slidingWindowSize), (slidingWindowSize*slidingWindowSize), 1)):
+            print((j+(slidingWindowSize*slidingWindowSize))+jjj)
+            print(((j+(slidingWindowSize*slidingWindowSize))+jjj)+(slidingWindowSize*slidingWindowSize))
+            # Get specific block according to slidingWindowSize
+            # While interPredictionBuffer need to move move move
+            # inter prediction sliding format : (offset) + ii : ((offset)+ii) + slidingWindow
+            errorTable[ii, jj] = np.floor(np.sum(np.sum(np.abs(averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize] - interPredictionBufferPadded[(i+slidingWindowSize)+iii:((i+slidingWindowSize)+iii)+slidingWindowSize, (j+slidingWindowSize)+jjj:((j+slidingWindowSize)+jjj)+slidingWindowSize]))))
+    return interPredictionCandidate

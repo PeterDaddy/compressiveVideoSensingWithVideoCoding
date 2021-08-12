@@ -42,10 +42,10 @@ def get_options():
 if __name__ == "__main__":
     #print("Parameter initialize")
     options                       = get_options()
-    operatingColorChannel         = 'rgb'
+    operatingColorChannel         = 'gray'
     subBlockSize                  = 'cow' # Sensing matrix type
     subBlockSize                  = 16    # This could be moved to optParser section
-    samplingRate                  = 64    # This could be moved to optParser section
+    samplingRate                  = 16    # This could be moved to optParser section
     slidingWindowSize             = 4
     quantizationSlidingWindowSize = 4
     quantizationBit               = 8
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
         if operatingColorChannel == 'gray':
             recoveredSignal = processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
-            plt.imshow(recoveredSignal, cmap = plt.get_cmap('gray'))
+            plt.imshow(recoveredSignal)
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 rRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, rOriginalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
@@ -112,6 +112,6 @@ if __name__ == "__main__":
             arr[:,:,2] = bRecoveredSignal
             recoveredSignal = Image.fromarray(arr)
         count = count + 1
-        recoveredSignal
         plt.imshow(recoveredSignal)
     plt.show()
+    print('Done!!')
