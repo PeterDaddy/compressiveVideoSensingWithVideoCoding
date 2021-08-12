@@ -1,13 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 17 15:47:36 2011
-
-Solve l1 minimization with quadratic AND equality constraints
-
-@author: ncleju
-"""
-
-
 import numpy as np
 import scipy.linalg
 import math
