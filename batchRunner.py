@@ -5,7 +5,7 @@ import time
 
 if __name__ == "__main__":
     #BatchRunner here is for compressive video sensing setup
-    files = ['sequences/beauty.mp4']
+    files = ['sequences/YachtRide.mp4']
     for file in files:
         argv = ['python','runner.py','-f',file]
         sp.Popen(argv)

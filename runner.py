@@ -42,40 +42,39 @@ def get_options():
 if __name__ == "__main__":
     #print("Parameter initialize")
     options                       = get_options()
-    operatingColorChannel         = 'gray'
+    operatingColorChannel         = 'rgb'
     subBlockSize                  = 'cow' # Sensing matrix type
     subBlockSize                  = 16    # This could be moved to optParser section
-    samplingRate                  = 16    # This could be moved to optParser section
+    samplingRate                  = 64    # This could be moved to optParser section
     slidingWindowSize             = 4
-    quantizationSlidingWindowSize = 4
-    quantizationBit               = 8
-    frameLimit                    = 1
+    quantizationSlidingWindowSize = 8
+    quantizationBit               = 16
+    frameLimit                    = 2
 
     # read original image/video
     #originalImage                 = Image.open(options.fileName, 'r')
-    cap = cv2.VideoCapture(options.fileName)
+    cap   = cv2.VideoCapture(options.fileName)
     count = 0
+    token = 0
+
     while (cap.isOpened()) and (count < frameLimit):
-        #print('Grabbed the frame')
-        ret,frame                     = cap.read()
-        originalImage                 = np.array(frame)
+        print('Grabbed the frame')
+        ret,frame                         = cap.read()
+        originalImage                     = np.array(frame)
         imgHeight, imgWidth, colorChannel = originalImage.shape
         if operatingColorChannel == 'gray':
-            originalImage             = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
-            originalImageIntObj       = np.array(originalImage)
-            colorChannel              = 1
-            recoveredSignal           = np.zeros((imgHeight,imgWidth))
+            originalImage        = cv2.cvtColor(originalImage, cv2.COLOR_BGR2GRAY)
+            originalImageIntObj  = np.array(originalImage)
+            recoveredSignal      = np.zeros((imgHeight,imgWidth))
         else:
-            originalImage             = originalImage
-            originalImageIntObj       = np.array(originalImage)
-            rOriginalImage, gOriginalImage, bOriginalImage = cv2.split(originalImageIntObj)
-            rOriginalImageIntObj      = np.array(rOriginalImage)
-            gOriginalImageIntObj      = np.array(gOriginalImage)
-            bOriginalImageIntObj      = np.array(bOriginalImage)
-            recoveredSignal           = np.zeros((imgHeight,imgWidth))
-            gRecoveredSignal          = np.zeros((imgHeight,imgWidth))
-            recoveredSignal           = np.zeros((imgHeight,imgWidth))
-        originalImageIntObj           = np.array(originalImage)
+            originalImage        = cv2.cvtColor(originalImage, cv2.COLOR_BGR2RGB)
+            rOriginalImageIntObj = np.array(originalImage[:,:,0])
+            gOriginalImageIntObj = np.array(originalImage[:,:,1])
+            bOriginalImageIntObj = np.array(originalImage[:,:,2])
+            rRecoveredSignal     = np.zeros((imgHeight,imgWidth))
+            gRecoveredSignal     = np.zeros((imgHeight,imgWidth))
+            bRecoveredSignal     = np.zeros((imgHeight,imgWidth))
+            recoveredSignal      = np.zeros((imgHeight,imgWidth))
 
         # compressed sensing parameter setup
         n = subBlockSize*subBlockSize
@@ -94,14 +93,34 @@ if __name__ == "__main__":
         theta = (theta['theta'])
         theta = np.double(theta[0:m,0:n])
 
+        padSubImageHeight = imgHeight/subBlockSize
+        padSubImageWidth  = imgWidth/subBlockSize
+        while (remainder(padSubImageHeight,slidingWindowSize) != 0): padSubImageHeight = padSubImageHeight + 1
+        while (remainder(padSubImageWidth,slidingWindowSize) != 0): padSubImageWidth   = padSubImageWidth + 1
+
         if operatingColorChannel == 'gray':
-            recoveredSignal = processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
-            plt.imshow(recoveredSignal)
+            # After that we create prediction template by applying intra/inter
+            # where sliding window can be varies but must be equal to slidingWindowSize parameter
+            # Allocate memory for datacube padSubImageWidth
+            intraPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+            if(token != 1):
+                interPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                token = 1
+            recoveredSignal = processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalImageIntObj, intraPredictionBuffer, interPredictionBuffer, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
+            #plt.imshow(recoveredSignal, cmap=plt.get_cmap('gray'))
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                rRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, rOriginalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
-                gRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, gOriginalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
-                bRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, bOriginalImageIntObj, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
+                rIntraPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                gIntraPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                bIntraPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                if(token != 1):
+                    rInterPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                    gInterPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                    bInterPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
+                    token = 1
+                rRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, rOriginalImageIntObj, rIntraPredictionBuffer, rInterPredictionBuffer, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
+                gRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, gOriginalImageIntObj, gIntraPredictionBuffer, gInterPredictionBuffer, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
+                bRecoveredSignalFuture = executor.submit(processingFunctionsPerChannel, imgHeight, imgWidth, subBlockSize, bOriginalImageIntObj, bIntraPredictionBuffer, bInterPredictionBuffer, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
                 rRecoveredSignal       = rRecoveredSignalFuture.result()
                 gRecoveredSignal       = gRecoveredSignalFuture.result()
                 bRecoveredSignal       = bRecoveredSignalFuture.result()
@@ -112,6 +131,6 @@ if __name__ == "__main__":
             arr[:,:,2] = bRecoveredSignal
             recoveredSignal = Image.fromarray(arr)
         count = count + 1
-        plt.imshow(recoveredSignal)
-    plt.show()
+        #plt.imshow(recoveredSignal)
+    #plt.show()
     print('Done!!')

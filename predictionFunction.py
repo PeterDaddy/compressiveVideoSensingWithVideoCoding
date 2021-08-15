@@ -298,15 +298,15 @@ def horizontalUp(left, slidingWindowSize):
 def sumOfAbsoluteDifference(verticalReplication, horizonatalReplication, meanDC, diagonalDownLeft, 
                             diagonalDownRight, verticalRight, horizontalDown, verticalLeft, horizontalUp, 
                             averageFrame, slidingWindowSize):
-    SADTable = [np.floor(np.sum(np.sum(np.abs(verticalReplication    - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(horizonatalReplication - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(meanDC                 - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(diagonalDownLeft       - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(diagonalDownRight      - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(verticalRight          - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(horizontalDown         - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(verticalLeft           - averageFrame)))),
-                np.floor(np.sum(np.sum(np.abs(horizontalUp           - averageFrame))))]
+    SADTable = [np.linalg.norm(verticalReplication    - averageFrame),
+                np.linalg.norm(horizonatalReplication - averageFrame),
+                np.linalg.norm(meanDC                 - averageFrame),
+                np.linalg.norm(diagonalDownLeft       - averageFrame),
+                np.linalg.norm(diagonalDownRight      - averageFrame),
+                np.linalg.norm(verticalRight          - averageFrame),
+                np.linalg.norm(horizontalDown         - averageFrame),
+                np.linalg.norm(verticalLeft           - averageFrame),
+                np.linalg.norm(horizontalUp           - averageFrame)]
 
     minimumIndexInSAD = SADTable.index(min(SADTable))
     if(minimumIndexInSAD == 0): 
@@ -350,16 +350,20 @@ def interPrediction(averageFrame, interPredictionBuffer, slidingWindowSize, i, j
     #        % c -> search_area. ex = 4
     #        % i -> x
     #        % j -> y
-    predictionTemplate                = np.zeros((slidingWindowSize, slidingWindowSize))
-    interPredictionBufferPadded       = np.pad(interPredictionBuffer, slidingWindowSize, mode='constant')
-    errorTable                        = np.zeros((slidingWindowSize*slidingWindowSize, slidingWindowSize*slidingWindowSize))
-    interPredictionCandidate          = 0
-    for ii, iii in enumerate(range(-(slidingWindowSize*slidingWindowSize), (slidingWindowSize*slidingWindowSize), 1)):
-        for jj ,jjj in enumerate(range(-(slidingWindowSize*slidingWindowSize), (slidingWindowSize*slidingWindowSize), 1)):
-            print((j+(slidingWindowSize*slidingWindowSize))+jjj)
-            print(((j+(slidingWindowSize*slidingWindowSize))+jjj)+(slidingWindowSize*slidingWindowSize))
+    interPredictionCandidate    = np.zeros((slidingWindowSize, slidingWindowSize))
+    interPredictionBufferPadded = np.pad(interPredictionBuffer, pad_width=slidingWindowSize)
+    errorTable                  = np.zeros(((slidingWindowSize*2)+1, (slidingWindowSize*2)+1))
+    for ii, iii in enumerate(range(-slidingWindowSize, slidingWindowSize+1, 1)):
+        for jj ,jjj in enumerate(range(-slidingWindowSize, slidingWindowSize+1, 1)):
             # Get specific block according to slidingWindowSize
             # While interPredictionBuffer need to move move move
             # inter prediction sliding format : (offset) + ii : ((offset)+ii) + slidingWindow
-            errorTable[ii, jj] = np.floor(np.sum(np.sum(np.abs(averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize] - interPredictionBufferPadded[(i+slidingWindowSize)+iii:((i+slidingWindowSize)+iii)+slidingWindowSize, (j+slidingWindowSize)+jjj:((j+slidingWindowSize)+jjj)+slidingWindowSize]))))
+            errorTable[ii, jj] = np.linalg.norm(averageFrame[i:i+slidingWindowSize, j:j+slidingWindowSize] - interPredictionBufferPadded[(i+(slidingWindowSize))+iii:((i+(slidingWindowSize))+iii)+slidingWindowSize, (j+(slidingWindowSize))+jjj:((j+(slidingWindowSize))+jjj)+slidingWindowSize])
+    predicted_y, predicted_x = np.where(errorTable == np.min(errorTable))
+    #print(predicted_y)
+    #print(predicted_x)
+    #print('The true coordinate Y : ', int(predicted_y-slidingWindowSize), ' ', 'The true coordinate X : ', int(predicted_x-slidingWindowSize))
+    newCoordinate_y          = np.min(predicted_y-slidingWindowSize)
+    newCoordinate_x          = np.min(predicted_x-slidingWindowSize)
+    interPredictionCandidate = interPredictionBufferPadded[(i+(slidingWindowSize))+newCoordinate_y:((i+(slidingWindowSize))+newCoordinate_y)+slidingWindowSize, (j+(slidingWindowSize))+newCoordinate_x:((j+(slidingWindowSize))+newCoordinate_x)+slidingWindowSize]
     return interPredictionCandidate
