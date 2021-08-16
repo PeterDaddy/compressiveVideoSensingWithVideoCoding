@@ -1,20 +1,46 @@
 import numpy as np
+from scipy.stats import entropy as scientropy
+from math import log, e
+import pandas as pd
 
-def entropy(x):
-    """
-    x is assumed to be an (nsignals, nsamples) array containing integers between
-    0 and n_unique_vals
-    """
-    x = np.atleast_2d(x)
-    nrows, ncols = x.shape
-    nbins = x.max() + 1
+import timeit
 
-    # count the number of occurrences for each unique integer between 0 and x.max()
-    # in each row of x
-    counts = np.vstack((np.bincount(row, minlength=nbins) for row in x))
+# def entropy1(labels, base=None):
+#   value,counts = np.unique(labels, return_counts=True)
+#   return entropy(counts, base=base)
 
-    # divide by number of columns to get the probability of each unique value
-    p = counts / float(ncols)
+# def entropy(labels, base=None):
+#   """ Computes entropy of label distribution. """
 
-    # compute Shannon entropy in bits
-    return -np.sum(p * np.log2(p), axis=1)
+#   n_labels = len(labels)
+
+#   if n_labels <= 1:
+#     return 0
+
+#   value,counts = np.unique(labels, return_counts=True)
+#   probs = counts / n_labels
+#   n_classes = np.count_nonzero(probs)
+
+#   if n_classes <= 1:
+#     return 0
+
+#   ent = 0.
+
+#   # Compute entropy
+#   base = e if base is None else base
+#   for i in probs:
+#     ent -= i * log(i, base)
+
+#   return ent
+
+# def entropy3(labels, base=None):
+#   vc = pd.Series(labels).value_counts(normalize=True, sort=False)
+#   base = e if base is None else base
+#   return -(vc * np.log(vc)/np.log(base)).sum()
+
+def entropy(data, base=None):
+    pd_series = pd.Series(data)
+    counts = pd_series.value_counts()
+    print(counts)
+    entropy = scientropy(counts)
+    return entropy/255

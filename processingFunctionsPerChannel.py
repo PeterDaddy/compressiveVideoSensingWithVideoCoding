@@ -17,6 +17,7 @@ from PIL import Image
 from sympy import fwht, ifwht
 from math import remainder
 from scipy.fftpack import dct, idct
+from entropy import entropy
 
 # implement 2D DCT
 def dct2(a):
@@ -43,9 +44,6 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
     # After that we create prediction template by applying intra/inter
     # where sliding window can be varies but must be equal to slidingWindowSize parameter
     # Allocate memory for datacube padSubImageWidth
-    #intraPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
-    #interPredictionBuffer     = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
-
     predictionTemplate        = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
     predictionMaps            = np.array(np.zeros((int(imgHeight), int(imgWidth), 3)))
     predictionModes           = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
@@ -111,9 +109,7 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
             # Store as usual
             intraPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize]
             interPredictionBuffer[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] = averageFrame[ii*slidingWindowSize:(ii*slidingWindowSize)+slidingWindowSize, jj*slidingWindowSize:(jj*slidingWindowSize)+slidingWindowSize] 
-    #plt.imshow(predictionTemplate, cmap=plt.get_cmap('gray'))
-    #plt.show()
-    #plt.pause(0.0001)
+
     #print('Compressing...')
     # The second procedure here is to make a real prediction
     # Alright, generally quantization 2x2 and 4x4 are good in transform coding performance but worst in quality
@@ -147,17 +143,13 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
                                          [16, 16, 16, 16, 16, 16, 16, 16],
                                          [16, 16, 16, 16, 16, 16, 16, 16]]
                 quantizedcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k] = np.floor((dctcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k])/quantizationTable)
-                #print('Coded : ',codedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k])
-                #print('DCT : ',dctcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k])
                 # Dequantization
                 dequantizedcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k] = np.floor((quantizedcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k])*quantizationTable)
                 # Transform decoding
                 idctcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k] = np.floor(idct2(dequantizedcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k]))
                 # Decode intra/inter
                 decodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k] = idctcodedDatacube[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, k] + predictionTemplate[ii*quantizationSlidingWindowSize:(ii*quantizationSlidingWindowSize)+quantizationSlidingWindowSize, jj*quantizationSlidingWindowSize:(jj*quantizationSlidingWindowSize)+quantizationSlidingWindowSize]
-    #plt.imshow(quantizedcodedDatacube[:,:,1], cmap=plt.get_cmap('gray'))
-    #plt.show()
-    #plt.pause(0.0001)
+
     # Context Adaptive Binary Arithmatic coding (CABAC) or just Huffman or Arithmatic coding
 
     # Packet formation
@@ -165,46 +157,23 @@ def processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalIma
     # Some network simulation is required here in case rate control has been included in framework
     
     #print("Entropy measuring")
-    # for i in range(0,int(imgHeight/subBlockSize)):
-    #     for j in range(0,int(imgWidth/subBlockSize)):
-    #         # Entropy
-    #         stat_info = os.stat(dataCube[i,j,:])
-    #         # get size of file in bytes
-    #         size = stat_info.st_size
-    #         print(size)
-    #         #uncompressed_entropy = uncompressed_entropy + (-np.sum(marg0*np.log2(marg0)))
-    #         #marg1 = (quantizedcodedDatacube[ii, jj, :]/quantizedcodedDatacube[ii, jj, :].sum(axis=0))
-    #         #compressed_entropy = compressed_entropy + (-np.sum(marg1*np.log2(marg1)))
-    # print('Entropy of uncompressed cube: ', uncompressed_entropy/samplingRate, ' / Entropy of compresed cube: ', compressed_entropy/samplingRate)
+    for ii, i in enumerate(range(0,int(padSubImageHeight), quantizationSlidingWindowSize)):
+        for jj, j in enumerate(range(0,int(padSubImageWidth), quantizationSlidingWindowSize)):
+            # Entropy
+            uncompressed_entropy = uncompressed_entropy + (entropy(undeterminedSignal[ii,jj,:]))
+            compressed_entropy = compressed_entropy + (entropy(quantizedcodedDatacube[ii,jj,:]))
+    print('Entropy of uncompressed cube: ', uncompressed_entropy, ' / Entropy of compresed cube: ', compressed_entropy)
     
-    #print("Signal recovery via convex optimization")
     # Signal recovery via convex optimization on software or hardware acceleration
     # L1 optimization setup
     # This will recover until meet n dimensional
     # for ii, i in enumerate(range(0,imgHeight,subBlockSize)):
-    #     for jj, j in enumerate(range(0,imgWidth,subBlockSize*8)):
+    #     for jj, j in enumerate(range(0,imgWidth,subBlockSize)):
     #         # initialize solution
-    #         with concurrent.futures.ThreadPoolExecutor() as executor:
-    #             jj = jj*8
-    #             future_0  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+0, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+0, :])
-    #             future_1  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+1, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+1, :])
-    #             future_2  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+2, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+2, :])
-    #             future_3  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+3, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+3, :])
-    #             future_4  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+4, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+4, :])
-    #             future_5  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+5, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+5, :])
-    #             future_6  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+6, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+6, :])
-    #             future_7  = executor.submit(l1eq_pd, (phi.T*decodedDatacube[ii, jj+7, :]).sum(axis=1), phi, [], decodedDatacube [ii, jj+7, :])
-
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*0):(j+(subBlockSize*0))+subBlockSize] = future_0.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*1):(j+(subBlockSize*1))+subBlockSize] = future_1.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*2):(j+(subBlockSize*2))+subBlockSize] = future_2.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*3):(j+(subBlockSize*3))+subBlockSize] = future_3.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*4):(j+(subBlockSize*4))+subBlockSize] = future_4.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*5):(j+(subBlockSize*5))+subBlockSize] = future_5.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*6):(j+(subBlockSize*6))+subBlockSize] = future_6.result().reshape(subBlockSize, subBlockSize)
-    #             recoveredSignal[i:i+subBlockSize, j+(subBlockSize*7):(j+(subBlockSize*7))+subBlockSize] = future_7.result().reshape(subBlockSize, subBlockSize)
-    #         #plt.imshow(recoveredSignal)
-    #         #plt.draw()
-    #         #plt.pause(0.0001)
-    #         #plt.clf()
+    #         initiaProblem = (phi.T*decodedDatacube[ii, jj, :]).sum(axis=1)
+    #         #with concurrent.futures.ThreadPoolExecutor() as executor:
+    #             #jj = jj*8
+    #             #future_0 = executor.submit(l1eq_pd, (phi.T*undeterminedSignal[ii, jj+0, :]).sum(axis=1), phi, [], undeterminedSignal [ii, jj+0, :])
+    #             #recoveredSignal[i:i+subBlockSize, j+(subBlockSize*0):(j+(subBlockSize*0))+subBlockSize] = future_0.result().reshape(subBlockSize, subBlockSize)
+    #         recoveredSignal[i:i+subBlockSize, j:j+subBlockSize] = (l1eq_pd(initiaProblem, phi, [], undeterminedSignal[ii, jj, :], pdtol=1e-3, pdmaxiter=50, cgtol=1e-8, cgmaxiter=200, verbose=False)).reshape(subBlockSize, subBlockSize)
     return recoveredSignal

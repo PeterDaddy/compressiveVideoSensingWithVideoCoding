@@ -42,23 +42,21 @@ def get_options():
 if __name__ == "__main__":
     #print("Parameter initialize")
     options                       = get_options()
-    operatingColorChannel         = 'rgb'
+    operatingColorChannel         = 'gray'
     subBlockSize                  = 'cow' # Sensing matrix type
     subBlockSize                  = 16    # This could be moved to optParser section
     samplingRate                  = 64    # This could be moved to optParser section
     slidingWindowSize             = 4
     quantizationSlidingWindowSize = 8
     quantizationBit               = 16
-    frameLimit                    = 2
+    frameLimit                    = 30
 
     # read original image/video
-    #originalImage                 = Image.open(options.fileName, 'r')
     cap   = cv2.VideoCapture(options.fileName)
     count = 0
     token = 0
 
     while (cap.isOpened()) and (count < frameLimit):
-        print('Grabbed the frame')
         ret,frame                         = cap.read()
         originalImage                     = np.array(frame)
         imgHeight, imgWidth, colorChannel = originalImage.shape
@@ -107,7 +105,7 @@ if __name__ == "__main__":
                 interPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
                 token = 1
             recoveredSignal = processingFunctionsPerChannel(imgHeight, imgWidth, subBlockSize, originalImageIntObj, intraPredictionBuffer, interPredictionBuffer, phi, theta, samplingRate, slidingWindowSize, quantizationSlidingWindowSize, quantizationBit)
-            #plt.imshow(recoveredSignal, cmap=plt.get_cmap('gray'))
+            plt.imshow(recoveredSignal, cmap=plt.get_cmap('gray'))
         else:
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 rIntraPredictionBuffer = np.array(np.zeros((int(padSubImageHeight), int(padSubImageWidth))))
@@ -131,6 +129,6 @@ if __name__ == "__main__":
             arr[:,:,2] = bRecoveredSignal
             recoveredSignal = Image.fromarray(arr)
         count = count + 1
-        #plt.imshow(recoveredSignal)
-    #plt.show()
+        plt.imshow(recoveredSignal)
+    plt.show()
     print('Done!!')
